@@ -43,6 +43,7 @@ export default function App() {
 		
         setSearchParams((searchParams)=>{
 			const param = {...searchParams}
+			param['filter'] = filter
 			param['query'] = query
 			return param
 		})
