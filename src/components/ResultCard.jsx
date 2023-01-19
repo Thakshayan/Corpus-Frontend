@@ -7,44 +7,74 @@ import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
+import FormBar from './FormBar';
 
 
-
-const ResultCard = ({album, composer, lyricist, lyrics, metaphors, singers, year, _id}) => {
+const ResultCard = ({_source: {album, composer, lyricist, lyrics, metaphors, singers, year, song_name}, _id,handledrop,dropMenu}) => {
     return ( 
-        <Grid item key={_id} xs={12} sm={6} md={4}>
-			<Card
-				sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-			>
-				<CardMedia
-					component="img"
-					sx={{
-						// 16:9
-						// pt: '56.25%',
-						}}
-					
-					// alt="random"
-				/>
-					<CardContent sx={{ flexGrow: 1 }}>
-					<Typography gutterBottom variant="h5" component="h2">
-						{album}
-					</Typography>
-					<Typography
-                        sx= {{
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                        }}
-                    >
-						{lyrics}
-					</Typography>
-				</CardContent>
-				<CardActions>
-					<Button size="small">year: {year}</Button>
-					<Button size="small">Edit</Button>
-				</CardActions>
-	        </Card>
-		</Grid>
+        <Grid item xs={12} >
+										<Card
+											sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+										>
+											<CardContent sx={{ flexGrow: 1 }}>
+												<Typography gutterBottom variant="h5" component="h2">
+													Song Name : {song_name}
+												</Typography>
+												<Typography>
+												   Composer : {composer}
+												</Typography>
+												<Typography
+													sx ={{
+														display: '-webkit-box',
+														overflow: 'hidden',
+														textOverflow: 'ellipsis',
+														WebkitLineClamp: 2,
+														WebkitBoxOrient: 'vertical'
+													}}
+												>
+													{ lyrics}
+												</Typography>
+											</CardContent>
+											<CardActions>
+												<Button size="small">year: {year}</Button>
+												<Button size="small" onClick={ (e)=>{handledrop(_id)}  } >View</Button>
+											</CardActions>
+											{ dropMenu._show && dropMenu._id == _id ? 
+												<Card>
+													{metaphors.map((metaphor) => (
+														<Grid>
+															<FormBar
+																label={"Lyricist"}
+																value = {lyricist}
+															/>
+															<FormBar
+																label={"Singers"}
+																value = {singers}
+															/>
+															<FormBar
+																label={"Metaphor"}
+																value = {metaphor.metaphor}
+															/>
+															<FormBar
+																label={"Source"}
+																value = {metaphor.source}
+															/>
+															<FormBar
+																label={"Target"}
+																value = {metaphor.target}
+															/>
+															<FormBar
+																label={"Interpretation"}
+																value = {metaphor.interpretation}
+															/>
+														</Grid>
+													))}
+												</Card>
+											:
+												null
+											}
+										</Card>
+									</Grid>
      );
 }
  

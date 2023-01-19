@@ -1,24 +1,16 @@
 import {useState, useEffect} from 'react';
-import AppBar from '@mui/material/AppBar';
 import Button from '@mui/material/Button';
 import SearchIcon from '@mui/icons-material/SearchOutlined';
-import Card from '@mui/material/Card';
-import CardActions from '@mui/material/CardActions';
-import CardContent from '@mui/material/CardContent';
-import CardMedia from '@mui/material/CardMedia';
 import CssBaseline from '@mui/material/CssBaseline';
 import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
-import Link from '@mui/material/Link';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import TextField from '@mui/material/TextField'
 import { useSearchParams } from "react-router-dom"
 import ResultCard from './components/ResultCard';
-import FormBar from './components/FormBar';
 import Filter from './components/FilterBar';
 import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
@@ -47,16 +39,16 @@ export default function App() {
 
     const handleSubmit = (e) => {
         e.preventDefault()
-        setSearchParams({ query })
+		console.log("param",searchParams)
+		
+        setSearchParams((searchParams)=>{
+			const param = {...searchParams}
+			param['query'] = query
+			return param
+		})
     }
-	
-	useEffect(()=>{
-		console.log(results)
-	},[results])
-
 
     useEffect(() => {
-		console.log(searchParams)
         if (!searchParams.get("query")) return
         setLoading(true)
 		const body = {
@@ -72,7 +64,14 @@ export default function App() {
                     (para) => para[1] === "true" && para[0] !== "filter"
                 )
                 .map((para) => para[0])
+        }else if(
+			searchParams.get("filter") &&
+            searchParams.get("filter") != null
+		){
+            body.filter = searchParams.get("filter")
         }
+
+		console.log("Into query")
         fetch("http://127.0.0.1:5000/search", {
             method: "POST",
             headers: {
@@ -94,6 +93,23 @@ export default function App() {
 			_id: _id,
 			_show: !dropMenu._show
 		})
+	}
+	const handleFilter = (value)=>{
+		
+		setSearchParams((searchParams)=>{
+			console.log('param filter', searchParams)
+			const param = {...searchParams}
+			param['query'] = query
+			param['filter'] = value
+			return param
+		})
+		console.log(searchParams)
+		setFilter(value)
+	}
+
+	const ClearFilter = ()=>{
+		setSearchParams({query})
+		setFilter(false)
 	}
 
 	return (
@@ -117,11 +133,10 @@ export default function App() {
 							<Box
 								sx={{backgroundColor:'#D3D3D3', p:3}}
 							>
-							{! filter ?
+							{ filter != true ?
 							<Stack 
 								container 
 								spacing={4} 
-								
 							>
 								<Grid container spacing={2}>
 									<Grid item xs={10} >
@@ -149,36 +164,48 @@ export default function App() {
 										</Button>
 									</Grid>
 								</Grid>
+								<Box sx={{display:'flex'}}>
 								<FormControlLabel
 									control={<Switch
-										checked={filter}
+										checked={filter==true}
 										onChange={()=>{setFilter(!filter)}}
 									/>}
 									label="Advance Filter"
 								/>
-							</Stack>
-							:
-							<Stack>
-								<Filter
-									open={filter}
-									handleClose={setFilter}
-									query = {query}
-									setSearchParams = {setSearchParams}
-									searchParams = {searchParams}
+								<FormControlLabel
+									control={<Switch
+										checked={filter=="full"}
+										onChange={()=>{handleFilter("full")}}
+									/>}
+									label="Full Text"
 								/>
+								<FormControlLabel
+									control={<Switch
+										checked={filter=="fuzzy"}
+										onChange={()=>{handleFilter("fuzzy")}}
+									/>}
+									label="Fuzzy Search"
+								/>
+								
+								</Box>
 							</Stack>
+							: filter != "full"  && filter != "fuzzy" ?
+								<Stack>
+									<Filter
+										open={filter}
+										handleClose={setFilter}
+										query = {query}
+										setSearchParams = {setSearchParams}
+										searchParams = {searchParams}
+									/>
+								</Stack>:
+								null
 							}
+							<Button onClick={ClearFilter}>
+								ClearFilter
+							</Button>
 							</Box>
-							{/* <Stack
-								sx={{ pt: 4 }}
-								direction="row"
-								spacing={2}
-								justifyContent="center"
-								fullwidth
-							>
-								<Button variant="contained">All</Button>
-								<Button variant="outlined">Year</Button>
-							</Stack> */}
+							
 						</Container>
 					</Box>
 					{query ?
@@ -188,80 +215,14 @@ export default function App() {
 								About {num_results.result} results ({num_results.time/1000} seconds) 
 							</Typography>
 							<Grid container spacing={4}>
-								{results?.map(({_source: {album, composer, lyricist, lyrics, metaphors, singers, year, song_name}, _id}) => (
-									<Grid item key={_id} xs={12} >
-										<Card
-											sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-										>
-											
-											{/* <CardMedia
-												component="img"
-												sx={{
-												// 16:9
-												// pt: '56.25%',
-												}}
-												image={`${I_Image}`}
-												// alt="random"
-											/> */}
-											<CardContent sx={{ flexGrow: 1 }}>
-												<Typography gutterBottom variant="h5" component="h2">
-													Song Name : {song_name}
-												</Typography>
-												<Typography>
-												   Composer : {composer}
-												</Typography>
-												<Typography
-													sx ={{
-														display: '-webkit-box',
-														overflow: 'hidden',
-														textOverflow: 'ellipsis',
-														WebkitLineClamp: 2,
-														WebkitBoxOrient: 'vertical'
-													}}
-												>
-													{ lyrics}
-												</Typography>
-											</CardContent>
-											<CardActions>
-												<Button size="small">year: {year}</Button>
-												<Button size="small" onClick={ (e)=>{handledrop(_id)}  } >View</Button>
-											</CardActions>
-											{ dropMenu._show && dropMenu._id == _id ? 
-												<Card>
-													{metaphors.map((metaphor) => (
-														<Grid>
-															<FormBar
-																label={"Lyricist"}
-																value = {lyricist}
-															/>
-															<FormBar
-																label={"Singers"}
-																value = {singers}
-															/>
-															<FormBar
-																label={"Metaphor"}
-																value = {metaphor.metaphor}
-															/>
-															<FormBar
-																label={"Source"}
-																value = {metaphor.source}
-															/>
-															<FormBar
-																label={"Target"}
-																value = {metaphor.target}
-															/>
-															<FormBar
-																label={"Interpretation"}
-																value = {metaphor.interpretation}
-															/>
-														</Grid>
-													))}
-												</Card>
-											:
-												null
-											}
-										</Card>
-									</Grid>
+								{results?.map(({_source, _id}) => (
+									<ResultCard
+										_source= {_source}
+										_id = {_id}
+										key = {_id}
+										handledrop = {handledrop}
+										dropMenu = {dropMenu}
+									/>
 								
 								))}
 							</Grid>
