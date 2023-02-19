@@ -97,6 +97,16 @@ export default function Filter({ open, handleClose, searchParams, setSearchParam
                     <FormControlLabel
                         control={
                             <Checkbox
+                                checked={!!filters.lyrics}
+                                name="lyrics"
+                                onChange={handleChange}
+                            />
+                        }
+                        label="lyrics"
+                    />
+                    <FormControlLabel
+                        control={
+                            <Checkbox
                                 checked={!!filters.song_name}
                                 name="song_name"
                                 onChange={handleChange}
